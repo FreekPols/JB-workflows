@@ -41,7 +41,7 @@ jobs:
       - name: Install MyST Markdown
         run: npm install -g mystmd
 
-      - name: Check labels
+      - name: Automated file checks
         run: python .jb-workflows/check.py
 
       - name: Build HTML

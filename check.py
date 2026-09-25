@@ -95,14 +95,14 @@ def main():
         errors.extend(check_file(path))
 
     if errors:
-        print("Figure checks failed:\n")
+        print("Some checks failed:\n")
 
         for error in errors:
             print(f"  ❌ {error}")
 
         # sys.exit(1)
     if not errors:
-        print("✅ All figure directives have a :name: label.")
+        print("✅ All checks passed.")
 
 
 if __name__ == "__main__":
