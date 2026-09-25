@@ -55,6 +55,9 @@ jobs:
           python -m ipykernel install --user --name=python3
 
 
+      - name: Check labels
+        run: |
+          python check.py    
       - name: Build HTML Assets
         run: myst build --html --execute
 
