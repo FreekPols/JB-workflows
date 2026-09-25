@@ -35,13 +35,12 @@ jobs:
         run: npm install -g mystmd
 
       - name: Check labels
-        run: |
-          python check.py    
+        run: python .jb-workflows/check.py
 
       - name: Build HTML
         env:
           BASE_URL: /${{ github.event.repository.name }}
-        run: myst build --html --debug
+        run: myst build --html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5

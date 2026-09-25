@@ -57,7 +57,8 @@ jobs:
 
       - name: Check labels
         run: |
-          python check.py    
+          python .jb-workflows/check.py    
+          
       - name: Build HTML Assets
         run: myst build --html --execute
 
