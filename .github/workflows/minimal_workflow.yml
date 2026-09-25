@@ -1,0 +1,60 @@
+# .github/workflows/myst-pages.yml
+
+name: Build and deploy MyST site
+
+on:
+  workflow_call:
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install jupyter ipykernel matplotlib numpy ipywidgets
+          python -m ipykernel install --user --name python3 --display-name "Python 3"
+
+      - name: Install MyST Markdown
+        run: npm install -g mystmd
+
+      - name: Build HTML
+        env:
+          BASE_URL: /${{ github.event.repository.name }}
+        run: myst build --html --debug
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './_build/html'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
