@@ -1,5 +1,5 @@
+# execute, no pdf
 name: MyST GitHub Pages Deploy
-
 on:
   push:
     branches: [main]
@@ -55,28 +55,6 @@ jobs:
           pip install matplotlib numpy pandas scipy plotly ipywidgets
           python -m ipykernel install --user --name=python3
 
-
-      - name: Build PDF
-        run: |
-          myst build --typst > build.log 2>&1 || true
-
-      - name: Upload Output PDF as Artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: Output PDF
-          path: exports/*.pdf
-          compression-level: 0
-
-      - name: Write build errors to errorlog.md
-        if: always()
-        run: |
-          echo "# PDF Build Error Log" > errorlog.md
-          echo "" >> errorlog.md
-          echo "**Build time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> errorlog.md
-          echo "" >> errorlog.md
-          echo '```text' >> errorlog.md
-          grep -iE "error|warning" build.log >> errorlog.md || echo "No errors or warnings." >> errorlog.md
-          echo '```' >> errorlog.md
 
       - name: Build HTML Assets
         run: myst build --html --execute
