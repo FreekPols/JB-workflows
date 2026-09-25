@@ -50,7 +50,7 @@ jobs:
         run: myst build --html
 
       - name: Generate figure gallery
-        run: python .jb-workflows/generate_figure_gallery.py
+        run: python .jb-workflows/listoffigs.py
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
