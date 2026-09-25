@@ -13,3 +13,5 @@ permissions:
 jobs:
   deploy:
     uses: FreekPols/JB-workflows/.github/workflows/minimal_workflow.yml@main
+          # FreekPols/JB-workflows/.github/workflows/execute.yml@main           # Python execute, no pdf
+          # FreekPols/JB-workflows/.github/workflows/pdf_workflow.yml@main      # pdf and execute
