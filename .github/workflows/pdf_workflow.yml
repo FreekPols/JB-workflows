@@ -4,8 +4,7 @@
 name: MyST GitHub Pages Deploy
 
 on:
-  push:
-    branches: [main]
+  workflow_call:
 
 env:
   BASE_URL: /${{ github.event.repository.name }}
