@@ -1,5 +1,6 @@
 from pathlib import Path
 from html import escape
+import shutil
 import re
 
 
@@ -28,7 +29,6 @@ def find_figures(markdown_file: Path):
 
         i += 1
 
-        # Read everything until closing ```
         while i < len(lines) and lines[i].strip() != "```":
             line = lines[i].strip()
 
@@ -37,18 +37,16 @@ def find_figures(markdown_file: Path):
             if name_match:
                 label = name_match.group(1)
 
-            # Ignore directive options such as :width:, :align:, etc.
-            elif line.startswith(":") and line.endswith(":"):
+            # Skip directive options
+            elif line.startswith(":"):
                 pass
 
-            elif not line.startswith(":"):
-                caption_lines.append(lines[i].strip())
+            elif line:
+                caption_lines.append(line)
 
             i += 1
 
-        caption = " ".join(
-            line for line in caption_lines if line
-        )
+        caption = " ".join(caption_lines)
 
         figures.append(
             {
@@ -64,47 +62,113 @@ def find_figures(markdown_file: Path):
     return figures
 
 
-def generate_html(figures, project_dir: Path):
-    """Generate a single HTML figure gallery."""
+def copy_images(figures, gallery_dir: Path):
+    """Copy all figure images into the gallery."""
+
+    images_dir = gallery_dir / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
+
+    for number, figure in enumerate(figures, start=1):
+
+        # Image paths in MyST are relative to the Markdown file
+        source_image = (
+            figure["source"].parent / figure["image"]
+        ).resolve()
+
+        if not source_image.exists():
+            print(
+                f"⚠ Image not found: "
+                f"{figure['image']} "
+                f"(referenced from {figure['source']})"
+            )
+
+            figure["gallery_image"] = None
+            continue
+
+        # Keep original extension (.png, .svg, .jpg, ...)
+        extension = source_image.suffix
+
+        filename = f"figure-{number:03d}{extension}"
+
+        destination = images_dir / filename
+
+        shutil.copy2(source_image, destination)
+
+        # Path as seen from index.html
+        figure["gallery_image"] = f"images/{filename}"
+
+        print(
+            f"  Copied {source_image} "
+            f"-> {destination}"
+        )
+
+
+def generate_html(figures):
+    """Generate the gallery HTML."""
 
     cards = []
 
     for figure in figures:
-        source = figure["source"]
-        image = figure["image"]
 
-        # Resolve image relative to the Markdown file
-        absolute_image = (source.parent / image).resolve()
+        label = figure["label"] or "⚠ NO LABEL"
+        caption = figure["caption"] or "No caption"
 
-        try:
-            relative_image = absolute_image.relative_to(project_dir)
-        except ValueError:
-            relative_image = absolute_image
+        if figure["gallery_image"]:
+
+            image_html = f"""
+                <img
+                    src="{escape(figure['gallery_image'])}"
+                    alt="{escape(caption)}"
+                    loading="lazy"
+                >
+            """
+
+        else:
+
+            image_html = """
+                <div class="missing-image">
+                    ⚠ Image not found
+                </div>
+            """
 
         cards.append(
             f"""
             <figure class="figure-card">
-                <img
-                    src="../../{escape(str(relative_image))}"
-                    alt="{escape(figure['caption'])}"
-                    loading="lazy"
-                >
+
+                {image_html}
+
                 <figcaption>
-                    <strong>{escape(figure['label'])}</strong>
-                    <p>{escape(figure['caption'])}</p>
-                    <small>{escape(str(source.relative_to(project_dir)))}</small>
+
+                    <strong>
+                        {escape(label)}
+                    </strong>
+
+                    <p>
+                        {escape(caption)}
+                    </p>
+
+                    <small>
+                        {escape(str(figure["source"]))}
+                    </small>
+
                 </figcaption>
+
             </figure>
             """
         )
 
     return f"""<!doctype html>
+
 <html lang="en">
+
 <head>
+
 <meta charset="utf-8">
+
 <title>Figure Gallery</title>
 
 <style>
+
 body {{
     font-family: system-ui, sans-serif;
     max-width: 1600px;
@@ -114,7 +178,8 @@ body {{
 
 .gallery {{
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns:
+        repeat(auto-fill, minmax(300px, 1fr));
     gap: 30px;
 }}
 
@@ -142,52 +207,90 @@ figcaption p {{
 small {{
     color: #666;
 }}
+
+.missing-image {{
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eee;
+}}
+
 </style>
+
 </head>
 
 <body>
 
 <h1>Figure Gallery</h1>
 
-<p>{len(figures)} figures found.</p>
+<p>
+    {len(figures)} figures found.
+</p>
 
 <div class="gallery">
+
 {''.join(cards)}
+
 </div>
 
 </body>
+
 </html>
 """
 
 
 def main():
+
     project_dir = Path.cwd()
+
     content_dir = project_dir / "content"
-    output_dir = project_dir / "_build" / "html"
+
+    gallery_dir = (
+        project_dir
+        / "_build"
+        / "html"
+        / "figure-gallery"
+    )
+
+    gallery_dir.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
     figures = []
 
     for markdown_file in content_dir.rglob("*.md"):
-        figures.extend(find_figures(markdown_file))
-
-    print(f"Found {len(figures)} figures")
-
-    for figure in figures:
-        print(
-            f"  {figure['label'] or '[no label]'} "
-            f"- {figure['caption']}"
+        figures.extend(
+            find_figures(markdown_file)
         )
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    output_file = output_dir / "figure-gallery.html"
-
-    output_file.write_text(
-        generate_html(figures, project_dir),
-        encoding="utf-8",
+    print(
+        f"Found {len(figures)} figures"
     )
 
-    print(f"Gallery written to {output_file}")
+    # Copy original images into gallery
+    copy_images(
+        figures,
+        gallery_dir
+    )
+
+    # Generate HTML
+    html = generate_html(figures)
+
+    output_file = (
+        gallery_dir
+        / "index.html"
+    )
+
+    output_file.write_text(
+        html,
+        encoding="utf-8"
+    )
+
+    print(
+        f"Gallery written to {output_file}"
+    )
 
 
 if __name__ == "__main__":
