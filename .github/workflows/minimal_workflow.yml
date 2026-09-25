@@ -23,6 +23,13 @@ jobs:
         with:
           fetch-depth: 0
 
+            # Checkout the repository containing the central checks
+      - name: Checkout JB workflows
+        uses: actions/checkout@v5
+        with:
+          repository: FreekPols/JB-workflows
+          path: .jb-workflows
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
