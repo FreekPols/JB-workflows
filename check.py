@@ -53,6 +53,7 @@ def check_file(path: Path) -> list[str]:
     figure_end = None
     figure_start_line = None
     has_name = False
+    has_alt = False
 
     for line_number, line in enumerate(lines, start=1):
 
@@ -66,6 +67,8 @@ def check_file(path: Path) -> list[str]:
         # While inside the figure, look for :name:
         elif inside_figure and line.strip().startswith((":name:", ":label:")):
             has_name = True
+        elif inside_figure and line.strip().startswith((":alt:",)):
+            has_alt = True
 
         # End of the figure directive
         elif inside_figure and line.strip() == figure_end:
@@ -73,6 +76,11 @@ def check_file(path: Path) -> list[str]:
                 errors.append(
                     f"{path}:{figure_start_line}: "
                     "figure directive has no :name: label"
+                )
+            if not has_alt:
+                errors.append(
+                    f"{path}:{figure_start_line}: "
+                    "figure directive has no :alt: label"
                 )
 
             inside_figure = False
