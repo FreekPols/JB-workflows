@@ -4,8 +4,8 @@ import shutil
 import re
 
 
-FIGURE_START = re.compile(r"^```\{figure\}\s+(.+?)\s*$")
-NAME = re.compile(r"^:name:\s*(.+?)\s*$")
+FIGURE_START = re.compile(r"^(```|:::)\{figure\}\s+(.+?)\s*$")
+LABEL = re.compile(r"^:(?:name|label):\s*(.+?)\s*$")
 
 def generate_html(figures, project_dir: Path):
     """Generate HTML with a figure overview table and gallery."""
@@ -244,19 +244,20 @@ def find_figures(markdown_file: Path):
             i += 1
             continue
 
-        image_path = match.group(1)
+        fence = match.group(1)
+        image_path = match.group(2)
         label = ""
         caption_lines = []
 
         i += 1
 
-        while i < len(lines) and lines[i].strip() != "```":
+        while i < len(lines) and lines[i].strip() != fence:
             line = lines[i].strip()
 
-            name_match = NAME.match(line)
+            label_match = LABEL.match(line)
 
-            if name_match:
-                label = name_match.group(1)
+            if label_match:
+                label = label_match.group(1)
 
             # Skip directive options
             elif line.startswith(":"):
