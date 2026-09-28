@@ -1,8 +1,7 @@
 name: Typst build
 
 on:
-  push:
-    branches: [main]
+  workflow_call:
 
 jobs:
   build_typst_documents:
