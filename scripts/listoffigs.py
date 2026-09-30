@@ -229,6 +229,8 @@ small {{
 </html>
 """
 
+
+
 def find_figures(markdown_file: Path):
     """Return all MyST figure directives in a Markdown file."""
 
@@ -325,13 +327,36 @@ def copy_images(figures, gallery_dir: Path):
         )
 
 
+def find_markdown_files(project_dir: Path):
+    """Find Markdown source files in the project."""
 
+    excluded_dirs = {
+        ".git",
+        ".github",
+        ".jb-workflows",
+        "_build",
+        "_checks",
+        "node_modules",
+        ".venv",
+        "venv",
+    }
+
+    markdown_files = []
+
+    for markdown_file in project_dir.rglob("*.md"):
+        relative_path = markdown_file.relative_to(project_dir)
+
+        # Ignore files inside generated/system directories
+        if any(part in excluded_dirs for part in relative_path.parts):
+            continue
+
+        markdown_files.append(markdown_file)
+
+    return markdown_files
 
 def main():
 
     project_dir = Path.cwd()
-
-    content_dir = project_dir / "content"
 
     gallery_dir = (
         project_dir
@@ -347,7 +372,7 @@ def main():
 
     figures = []
 
-    for markdown_file in content_dir.rglob("*.md"):
+    for markdown_file in find_markdown_files(project_dir):
         figures.extend(
             find_figures(markdown_file)
         )
@@ -356,13 +381,11 @@ def main():
         f"Found {len(figures)} figures"
     )
 
-    # Copy original images into gallery
     copy_images(
         figures,
         gallery_dir
     )
 
-    # Generate HTML
     html = generate_html(figures, project_dir)
 
     output_file = (
@@ -378,6 +401,7 @@ def main():
     print(
         f"Gallery written to {output_file}"
     )
+    
 
 
 if __name__ == "__main__":
