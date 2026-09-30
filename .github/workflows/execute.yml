@@ -54,7 +54,8 @@ jobs:
           pip install matplotlib numpy pandas scipy plotly ipywidgets
           python -m ipykernel install --user --name=python3
 
-
+      - name: Automated file checks
+        run: python .jb-workflows/scripts/check.py
          
       - name: Build HTML Assets
         run: myst build --html --execute

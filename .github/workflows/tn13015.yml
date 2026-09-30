@@ -57,7 +57,7 @@ jobs:
           python -m pip install nbformat numpy
 
       - name: Check output codecells
-        run: python .jb-workflows/scripts/check.py
+        run: python .jb-workflows/scripts/checktn13015.py
 
       - name: Install MyST
         run: npm install -g mystmd

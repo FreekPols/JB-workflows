@@ -4,7 +4,7 @@ name: Deploy
 on:
   push:
     # branches: [main]
-    
+      
 permissions:
   contents: read
   pages: write
@@ -12,6 +12,12 @@ permissions:
   
 jobs:
   deploy:
-    uses: FreekPols/JB-workflows/.github/workflows/minimal_workflow.yml@main
+    uses: FreekPols/JB-workflows/.github/workflows/menu.yml@main
+    with:
+      build_pdf: false
+      execute_python: false
+      run_nb_checks: false
+      run_fig_checks: false
+
           # FreekPols/JB-workflows/.github/workflows/execute.yml@main           # Python execute, no pdf
           # FreekPols/JB-workflows/.github/workflows/pdf_workflow.yml@main      # pdf and execute

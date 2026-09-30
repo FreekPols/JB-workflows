@@ -1,10 +1,31 @@
 # Build pages with Python execute
 
 
-name: MyST GitHub Pages Deploy
+name: Buildscript with menu
 
 on:
   workflow_call:
+    inputs:
+      build_pdf:
+        description: "Build PDF"
+        required: false
+        type: boolean
+        default: false
+      execute_python: 
+        description: "Execute Python code"
+        required: false
+        type: boolean
+        default: false
+      run_nb_checks: 
+        description: "Run notebook checks"
+        required: false
+        type: boolean
+        default: false
+      run_fig_checks: 
+        description: "Run figure checks"
+        required: false
+        type: boolean
+        default: false
 
 env:
   BASE_URL: /${{ github.event.repository.name }}
@@ -33,12 +54,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Checkout Typst template fonts
+      - name: Checkout JB workflows
         uses: actions/checkout@v5
         with:
-          repository: TUD-JB-OS/typst_template
-          ref: main
-          path: typst_template
+            repository: FreekPols/JB-workflows
+            path: .jb-workflows
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -52,11 +72,13 @@ jobs:
         run: npm install -g mystmd
 
       - name: Set up Python
+        if: ${{ inputs.build_pdf || inputs.execute_python || inputs.run_nb_checks || inputs.run_fig_checks }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'   # or your version
 
       - name: Install Python dependencies
+        if: ${{ inputs.build_pdf || inputs.execute_python || inputs.run_nb_checks || inputs.run_fig_checks }}
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
@@ -64,11 +86,25 @@ jobs:
           pip install matplotlib numpy pandas scipy plotly ipywidgets
           python -m ipykernel install --user --name=python3
       
+      - name: Checkout Typst template fonts
+        if: ${{ inputs.build_pdf }}
+        uses: actions/checkout@v5
+        with:
+          repository: TUD-JB-OS/typst_template
+          ref: main
+          path: typst_template
+
+      - name: Setup Typst
+        if: ${{ inputs.build_pdf }}
+        uses: typst-community/setup-typst@v4
+
       - name: Build PDF
+        if: ${{ inputs.build_pdf }}
         run: |
           myst build --typst > build.log 2>&1 || true
                   
       - name: Upload Output PDF as Artifact
+        if: ${{ inputs.build_pdf }}
         uses: actions/upload-artifact@v4
         with:
           name: Output PDF
@@ -76,7 +112,7 @@ jobs:
           compression-level: 0
 
       - name: Write build errors to errorlog.md
-        if: always()
+        if: ${{ inputs.build_pdf }}
         run: |
           echo "# PDF Build Error Log" > errorlog.md
           echo "" >> errorlog.md
@@ -87,10 +123,20 @@ jobs:
           echo '```' >> errorlog.md
 
       - name: Automated file checks
+        if: ${{ inputs.run_nb_checks }}
         run: python .jb-workflows/scripts/check.py
         
-      - name: Build HTML Assets
+      - name: Automated figure checks
+        if: ${{ inputs.run_fig_checks }}
+        run: python .jb-workflows/scripts/listoffigs.py
+
+      - name: Build HTML Assets with Python execution
+        if: ${{ inputs.execute_python }}
         run: myst build --html --execute
+
+      - name: Build HTML Assets without Python execution
+        if: ${{ !inputs.execute_python }}
+        run: myst build --html
 
       - name: Upload HTML artifact
         uses: actions/upload-pages-artifact@v5
