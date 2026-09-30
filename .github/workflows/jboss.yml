@@ -1,7 +1,7 @@
 # Build pages with Python execute
 
 
-name: MyST GitHub Pages Deploy
+name: JBOSS Deploy HTML & Build PDF Workflow 
 
 on:
   workflow_call:

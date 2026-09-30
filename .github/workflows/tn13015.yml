@@ -1,0 +1,73 @@
+# This file was created automatically with `myst init --gh-pages` 🪄 💚
+# Ensure your GitHub Pages settings for this repository are set to deploy with **GitHub Actions**.
+
+name: TN13015 Build & Check workflow
+on:
+  workflow_call:
+
+env:
+  # `BASE_URL` determines, relative to the root of the domain, the URL that your site is served from.
+  # E.g., if your site lives at `https://mydomain.org/myproject`, set `BASE_URL=/myproject`.
+  # If, instead, your site lives at the root of the domain, at `https://mydomain.org`, set `BASE_URL=''`.
+  BASE_URL: /${{ github.event.repository.name }}
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout JB workflows
+        uses: actions/checkout@v5
+        with:
+          repository: FreekPols/JB-workflows
+          path: .jb-workflows
+
+      - uses: actions/checkout@v7
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install nbformat numpy
+
+      - name: Check output codecells
+        run: python .jb-workflows/scripts/check.py
+
+      - name: Install MyST
+        run: npm install -g mystmd
+
+      - name: Build HTML Assets
+        run: myst build --html
+
+      - name: Add check report
+        run: cp _checks/checks.html _build/html/checks.html
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: './_build/html'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
