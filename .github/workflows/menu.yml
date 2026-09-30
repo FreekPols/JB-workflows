@@ -96,10 +96,6 @@ jobs:
         if: ${{ inputs.run_nb_checks }}
         run: python .jb-workflows/scripts/check.py
         
-      - name: Automated figure checks
-        if: ${{ inputs.run_fig_checks }}
-        run: python .jb-workflows/scripts/listoffigs.py
-
       - name: Check output codecells
         if: ${{ inputs.run_code_checks }}
         run: python .jb-workflows/scripts/codechecks.py
@@ -152,10 +148,16 @@ jobs:
         if: ${{ !inputs.execute_python }}
         run: myst build --html
 
+#### ---- ADD CHECK REPORT ---- ####
       - name: Add check report
         if: ${{ inputs.run_code_checks }}
         run: cp _checks/checks.html _build/html/checks.html
 
+      - name: Automated figure checks
+        if: ${{ inputs.run_fig_checks }}
+        run: python .jb-workflows/scripts/listoffigs.py
+
+#### ---- DEPLOY TO GITHUB PAGES ---- ####        
       - name: Upload HTML artifact
         uses: actions/upload-pages-artifact@v5
         with:
