@@ -27,6 +27,11 @@ on:
         type: boolean
         default: false
 
+      run_code_checks: 
+        description: "Run code cell checks"
+        required: false
+        type: boolean
+        default: false
 env:
   BASE_URL: /${{ github.event.repository.name }}
 
@@ -71,6 +76,7 @@ jobs:
       - name: Install MyST
         run: npm install -g mystmd
 
+##### ---- SETUP PYTHON ---- ####
       - name: Set up Python
         if: ${{ inputs.build_pdf || inputs.execute_python || inputs.run_nb_checks || inputs.run_fig_checks }}
         uses: actions/setup-python@v5
@@ -86,6 +92,19 @@ jobs:
           pip install matplotlib numpy pandas scipy plotly ipywidgets
           python -m ipykernel install --user --name=python3
       
+      - name: Automated file checks
+        if: ${{ inputs.run_nb_checks }}
+        run: python .jb-workflows/scripts/check.py
+        
+      - name: Automated figure checks
+        if: ${{ inputs.run_fig_checks }}
+        run: python .jb-workflows/scripts/listoffigs.py
+
+      - name: Check output codecells
+        if: ${{ inputs.run_code_checks }}
+        run: python .jb-workflows/scripts/codechecks.py
+
+#### ---- BUILD PDF ---- ####      
       - name: Checkout Typst template fonts
         if: ${{ inputs.build_pdf }}
         uses: actions/checkout@v5
@@ -122,14 +141,8 @@ jobs:
           grep -iE "error|warning" build.log >> errorlog.md || echo "No errors or warnings." >> errorlog.md
           echo '```' >> errorlog.md
 
-      - name: Automated file checks
-        if: ${{ inputs.run_nb_checks }}
-        run: python .jb-workflows/scripts/check.py
-        
-      - name: Automated figure checks
-        if: ${{ inputs.run_fig_checks }}
-        run: python .jb-workflows/scripts/listoffigs.py
 
+##### ---- BUILD HTML ---- ####          
       - name: Build HTML Assets with Python execution
         if: ${{ inputs.execute_python }}
         run: myst build --html --execute
