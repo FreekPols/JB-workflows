@@ -104,9 +104,6 @@ jobs:
         if: ${{ inputs.run_code_checks }}
         run: python .jb-workflows/scripts/codechecks.py
 
-      - name: Add check report
-        if: ${{ inputs.run_code_checks }}
-        run: cp _checks/checks.html _build/html/checks.html
 
 #### ---- BUILD PDF ---- ####      
       - name: Checkout Typst template fonts
@@ -154,6 +151,10 @@ jobs:
       - name: Build HTML Assets without Python execution
         if: ${{ !inputs.execute_python }}
         run: myst build --html
+
+      - name: Add check report
+        if: ${{ inputs.run_code_checks }}
+        run: cp _checks/checks.html _build/html/checks.html
 
       - name: Upload HTML artifact
         uses: actions/upload-pages-artifact@v5
