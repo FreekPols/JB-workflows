@@ -104,6 +104,10 @@ jobs:
         if: ${{ inputs.run_code_checks }}
         run: python .jb-workflows/scripts/codechecks.py
 
+      - name: Add check report
+        if: ${{ inputs.run_code_checks }}
+        run: cp _checks/checks.html _build/html/checks.html
+
 #### ---- BUILD PDF ---- ####      
       - name: Checkout Typst template fonts
         if: ${{ inputs.build_pdf }}
