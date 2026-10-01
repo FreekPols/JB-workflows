@@ -108,64 +108,81 @@ def check_sol_2(func):
 check("sol_check_2", check_sol_2, functions[1])    
 
 
-
-##### GENERARTE HTML REPORT #####
-output = Path("_checks/checks.html")
+##### GENERATE MARKDOWN REPORT #####
+output = Path("codechecks.md")
 output.parent.mkdir(parents=True, exist_ok=True)
 
-rows = []
+with output.open("w") as f:
+    f.write("# Notebook checks\n\n")
+    f.write("| Check | Status | Details |\n")
+    f.write("|-------|--------|---------|\n")
 
 for name, passed, message in results:
     status = "✅ PASS" if passed else "❌ FAIL"
 
-    rows.append(f"""
-        <tr>
-            <td>{html.escape(name)}</td>
-            <td>{status}</td>
-            <td>{html.escape(message)}</td>
-        </tr>
-    """)
+    # Keep exception messages inside one Markdown table cell
+    details = str(message).replace("|", r"\|").replace("\n", "<br>")
 
-output.write_text(
-    f"""<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Notebook checks</title>
-    <style>
-        body {{
-            font-family: system-ui, sans-serif;
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }}
-        table {{
-            border-collapse: collapse;
-            width: 100%;
-        }}
-        th, td {{
-            text-align: left;
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }}
-    </style>
-</head>
-<body>
-    <h1>Notebook checks</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Check</th>
-                <th>Status</th>
-                <th>Details</th>
-            </tr>
-        </thead>
-        <tbody>
-            {''.join(rows)}
-        </tbody>
-    </table>
-</body>
-</html>
-""",
-    encoding="utf-8",
-)
+    f.write(f"| {name} | {status} | {details} |\n")
+
+
+##### GENERARTE HTML REPORT #####
+# output = Path("_checks/checks.html")
+# output.parent.mkdir(parents=True, exist_ok=True)
+
+# rows = []
+
+# for name, passed, message in results:
+#     status = "✅ PASS" if passed else "❌ FAIL"
+
+#     rows.append(f"""
+#         <tr>
+#             <td>{html.escape(name)}</td>
+#             <td>{status}</td>
+#             <td>{html.escape(message)}</td>
+#         </tr>
+#     """)
+
+# output.write_text(
+#     f"""<!DOCTYPE html>
+# <html lang="nl">
+# <head>
+#     <meta charset="utf-8">
+#     <title>Notebook checks</title>
+#     <style>
+#         body {{
+#             font-family: system-ui, sans-serif;
+#             max-width: 1000px;
+#             margin: 40px auto;
+#             padding: 0 20px;
+#         }}
+#         table {{
+#             border-collapse: collapse;
+#             width: 100%;
+#         }}
+#         th, td {{
+#             text-align: left;
+#             padding: 10px;
+#             border-bottom: 1px solid #ddd;
+#         }}
+#     </style>
+# </head>
+# <body>
+#     <h1>Notebook checks</h1>
+#     <table>
+#         <thead>
+#             <tr>
+#                 <th>Check</th>
+#                 <th>Status</th>
+#                 <th>Details</th>
+#             </tr>
+#         </thead>
+#         <tbody>
+#             {''.join(rows)}
+#         </tbody>
+#     </table>
+# </body>
+# </html>
+# """,
+#     encoding="utf-8",
+# )

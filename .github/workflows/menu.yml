@@ -149,9 +149,10 @@ jobs:
         run: myst build --html
 
 #### ---- ADD CHECK REPORT ---- ####
-      - name: Add check report
-        if: ${{ inputs.run_code_checks }}
-        run: cp _checks/checks.html _build/html/checks.html
+      # not needed when reporting errors using markdown file
+      # - name: Add check report
+      #   if: ${{ inputs.run_code_checks }}
+      #   run: cp _checks/checks.html _build/html/checks.html
 
       - name: Automated figure checks
         if: ${{ inputs.run_fig_checks }}
