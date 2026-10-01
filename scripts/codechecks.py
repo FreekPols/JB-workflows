@@ -20,8 +20,8 @@ results = []        # Store the results of all checks
 
 # Get python code from tagged cell from the specified notebook file
 source = [
-        get_tagged_cell("opdracht.ipynb",  "sol_check_1"), 
-        get_tagged_cell("opdracht.ipynb",  "sol_check_2")
+        get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_1"), 
+        get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_2")
         ]
 
 
