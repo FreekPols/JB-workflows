@@ -117,13 +117,13 @@ with output.open("w") as f:
     f.write("| Check | Status | Details |\n")
     f.write("|-------|--------|---------|\n")
 
-for name, passed, message in results:
-    status = "✅ PASS" if passed else "❌ FAIL"
+    for name, passed, message in results:
+        status = "✅ PASS" if passed else "❌ FAIL"
 
-    # Keep exception messages inside one Markdown table cell
-    details = str(message).replace("|", r"\|").replace("\n", "<br>")
+        # Keep exception messages inside one Markdown table cell
+        details = str(message).replace("|", r"\|").replace("\n", "<br>")
 
-    f.write(f"| {name} | {status} | {details} |\n")
+        f.write(f"| {name} | {status} | {details} |\n")
 
 
 ##### GENERARTE HTML REPORT #####
