@@ -76,6 +76,8 @@ jobs:
       - name: Install MyST
         run: npm install -g mystmd
 
+      - name: Install ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
 ##### ---- SETUP PYTHON ---- ####
       - name: Set up Python
         if: ${{ inputs.build_pdf || inputs.execute_python || inputs.run_nb_checks || inputs.run_fig_checks }}
