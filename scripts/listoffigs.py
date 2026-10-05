@@ -46,12 +46,16 @@ def generate_html(figures, project_dir: Path):
         # -------------------------
 
         if figure["gallery_image"]:
+            image_path = escape(figure["gallery_image"])
+
             image_html = f"""
-                <img
-                    src="{escape(figure['gallery_image'])}"
-                    alt="{escape(caption)}"
-                    loading="lazy"
-                >
+                <a href="{image_path}" target="_blank">
+                            <img
+                                src="{image_path}"
+                                alt="{escape(caption)}"
+                                loading="lazy"
+                            >
+                        </a>
             """
         else:
             image_html = """
