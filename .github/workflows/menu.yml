@@ -144,11 +144,14 @@ jobs:
 ##### ---- BUILD HTML ---- ####          
       - name: Build HTML Assets with Python execution
         if: ${{ inputs.execute_python }}
-        run: myst build --html --execute
+        run: myst build --html --execute 2>&1 | tee build.log
 
       - name: Build HTML Assets without Python execution
         if: ${{ !inputs.execute_python }}
-        run: myst build --html
+        run: myst build --html  2>&1 | tee build.log
+
+      - name: Generate MyST error report
+        run: python .jb-workflows/scripts/errorlog.py
 
 #### ---- ADD CHECK REPORT ---- ####
       # not needed when reporting errors using markdown file
