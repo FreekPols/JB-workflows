@@ -76,37 +76,37 @@ def generate_html(figures, project_dir: Path):
                 </div>
             """
 
-       alt_info = (
-            f'<p class="alt-text">'
-            f'<strong>Alt text:</strong> {escape(alt_text)}'
-            f'</p>'
-            if figure["has_alt_text"]
-            else '<p class="alt-warning">'
-                 '⚠ Missing alt text'
-                 '</p>'
-        )
+            alt_info = (
+                    f'<p class="alt-text">'
+                    f'<strong>Alt text:</strong> {escape(alt_text)}'
+                    f'</p>'
+                    if figure["has_alt_text"]
+                    else '<p class="alt-warning">'
+                        '⚠ Missing alt text'
+                        '</p>'
+                )
 
-        cards.append(
-            f"""
-            <figure class="figure-card">
+            cards.append(
+                f"""
+                <figure class="figure-card">
 
-                {image_html}
+                    {image_html}
 
-                <figcaption>
-                    <strong>{escape(label)}</strong>
+                    <figcaption>
+                        <strong>{escape(label)}</strong>
 
-                    <p>{escape(caption)}</p>
+                        <p>{escape(caption)}</p>
 
-                    {alt_info}
+                        {alt_info}
 
-                    <small>
-                        {escape(str(source))}
-                    </small>
-                </figcaption>
+                        <small>
+                            {escape(str(source))}
+                        </small>
+                    </figcaption>
 
-            </figure>
-            """
-        )
+                </figure>
+                """
+            )
 
     return f"""<!doctype html>
 
