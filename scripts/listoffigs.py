@@ -51,7 +51,7 @@ def generate_html(figures, project_dir: Path):
             """
         )
 
-        )
+        
 
         # -------------------------
         # Gallery
