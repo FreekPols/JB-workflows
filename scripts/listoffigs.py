@@ -6,6 +6,7 @@ import re
 
 FIGURE_START = re.compile(r"^(```|:::)\{figure\}\s+(.+?)\s*$")
 LABEL = re.compile(r"^:(?:name|label):\s*(.+?)\s*$")
+ALT_TEXT = re.compile(r"^:alt:\s*(.*?)\s*$")
 
 def generate_html(figures, project_dir: Path):
     """Generate HTML with a figure overview table and gallery."""
@@ -16,6 +17,7 @@ def generate_html(figures, project_dir: Path):
     for figure in figures:
         label = figure["label"] or "⚠ NO LABEL"
         caption = figure["caption"] or "No caption"
+        alt_text = figure["alt_text"] or "No alt text"
 
         # Show source relative to repository root
         try:
@@ -30,15 +32,25 @@ def generate_html(figures, project_dir: Path):
         # Table
         # -------------------------
 
+        alt_status = (
+            "✓ Present"
+            if figure["has_alt_text"]
+            else "⚠ Missing"
+        )
+
         table_rows.append(
             f"""
             <tr>
                 <td>{escape(figure_name)}</td>
                 <td>{escape(caption)}</td>
                 <td><code>{escape(label)}</code></td>
+                <td>{escape(alt_text)}</td>
+                <td>{alt_status}</td>
                 <td><code>{escape(str(source))}</code></td>
             </tr>
             """
+        )
+
         )
 
         # -------------------------
@@ -52,7 +64,7 @@ def generate_html(figures, project_dir: Path):
                 <a href="{image_path}" target="_blank">
                             <img
                                 src="{image_path}"
-                                alt="{escape(caption)}"
+                                alt="{escape(figure['alt_text'])}"
                                 loading="lazy"
                             >
                         </a>
@@ -64,6 +76,16 @@ def generate_html(figures, project_dir: Path):
                 </div>
             """
 
+       alt_info = (
+            f'<p class="alt-text">'
+            f'<strong>Alt text:</strong> {escape(alt_text)}'
+            f'</p>'
+            if figure["has_alt_text"]
+            else '<p class="alt-warning">'
+                 '⚠ Missing alt text'
+                 '</p>'
+        )
+
         cards.append(
             f"""
             <figure class="figure-card">
@@ -74,6 +96,8 @@ def generate_html(figures, project_dir: Path):
                     <strong>{escape(label)}</strong>
 
                     <p>{escape(caption)}</p>
+
+                    {alt_info}
 
                     <small>
                         {escape(str(source))}
@@ -207,6 +231,8 @@ small {{
     <th>Figure name</th>
     <th>Caption</th>
     <th>Label</th>
+    <th>Alt text</th>
+    <th>Alt status</th>
     <th>Source</th>
 </tr>
 </thead>
@@ -235,6 +261,7 @@ small {{
 
 
 
+
 def find_figures(markdown_file: Path):
     """Return all MyST figure directives in a Markdown file."""
 
@@ -252,7 +279,9 @@ def find_figures(markdown_file: Path):
 
         fence = match.group(1)
         image_path = match.group(2)
+
         label = ""
+        alt_text = ""
         caption_lines = []
 
         i += 1
@@ -261,11 +290,15 @@ def find_figures(markdown_file: Path):
             line = lines[i].strip()
 
             label_match = LABEL.match(line)
+            alt_match = ALT_TEXT.match(line)
 
             if label_match:
                 label = label_match.group(1)
 
-            # Skip directive options
+            elif alt_match:
+                alt_text = alt_match.group(1)
+
+            # Skip other directive options
             elif line.startswith(":"):
                 pass
 
@@ -281,6 +314,8 @@ def find_figures(markdown_file: Path):
                 "image": image_path,
                 "label": label,
                 "caption": caption,
+                "alt_text": alt_text,
+                "has_alt_text": bool(alt_text.strip()),
                 "source": markdown_file,
             }
         )
@@ -288,6 +323,7 @@ def find_figures(markdown_file: Path):
         i += 1
 
     return figures
+
 
 
 def copy_images(figures, gallery_dir: Path):
