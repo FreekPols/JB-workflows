@@ -1,6 +1,8 @@
+# This file is used to automatically test python functions and code in students' work.
 
+import numpy as np
 
-# functions to check NB1
+## First check
 def check_doorlopende_doos(update_function):
     class FakeParticle:
         def __init__(self):
@@ -39,12 +41,9 @@ def check_doorlopende_doos(update_function):
 
         update_function(0)
 
-        np.testing.assert_allclose(
-            particle.r[0],
-            expected_x,
-            err_msg=f"Incorrect boundary handling for x={initial_x}"
-        )
+        np.testing.assert_allclose(particle.r[0], expected_x, err_msg=f"Incorrect boundary handling for x={initial_x}")
 
+## Second check
 def check_harde_wanden(update_function):
 
     class FakeParticle:
@@ -94,6 +93,7 @@ def check_harde_wanden(update_function):
             )
         )
 
+## Third check
 def check_botsingsvoorwaarde(ParticleClass):
 
     # Test cases:
@@ -114,19 +114,8 @@ def check_botsingsvoorwaarde(ParticleClass):
     for r1, R1, r2, R2, expected in test_cases:
 
         # Create two particles
-        particle1 = ParticleClass(
-            m=1,
-            v=[0, 0],
-            r=r1,
-            R=R1
-        )
-
-        particle2 = ParticleClass(
-            m=1,
-            v=[0, 0],
-            r=r2,
-            R=R2
-        )
+        particle1 = ParticleClass(m=1,v=[0, 0],r=r1,R=R1)
+        particle2 = ParticleClass(m=1,v=[0, 0],r=r2,R=R2)
 
         # Call the student's collision detection method
         result = particle1.collide_detection(particle2)

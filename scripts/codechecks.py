@@ -102,7 +102,7 @@ def check(name, func, *args):
 
 check("NB1_doorlopendedoos", check_doorlopende_doos, functions[0])
 check("NB1_hardewand", check_harde_wanden, functions[1])
-# check("NB1_botsingsvoorwaarde", check_botsingsvoorwaarde, functions[2])
+check("NB1_botsingsvoorwaarde", check_botsingsvoorwaarde, functions[2])
 
 
 
@@ -122,65 +122,3 @@ with output.open("w") as f:
         details = str(message).replace("|", r"\|").replace("\n", "<br>")
 
         f.write(f"| {name} | {status} | {details} |\n")
-
-
-##### GENERARTE HTML REPORT #####
-# output = Path("_checks/checks.html")
-# output.parent.mkdir(parents=True, exist_ok=True)
-
-# rows = []
-
-# for name, passed, message in results:
-#     status = "✅ PASS" if passed else "❌ FAIL"
-
-#     rows.append(f"""
-#         <tr>
-#             <td>{html.escape(name)}</td>
-#             <td>{status}</td>
-#             <td>{html.escape(message)}</td>
-#         </tr>
-#     """)
-
-# output.write_text(
-#     f"""<!DOCTYPE html>
-# <html lang="nl">
-# <head>
-#     <meta charset="utf-8">
-#     <title>Notebook checks</title>
-#     <style>
-#         body {{
-#             font-family: system-ui, sans-serif;
-#             max-width: 1000px;
-#             margin: 40px auto;
-#             padding: 0 20px;
-#         }}
-#         table {{
-#             border-collapse: collapse;
-#             width: 100%;
-#         }}
-#         th, td {{
-#             text-align: left;
-#             padding: 10px;
-#             border-bottom: 1px solid #ddd;
-#         }}
-#     </style>
-# </head>
-# <body>
-#     <h1>Notebook checks</h1>
-#     <table>
-#         <thead>
-#             <tr>
-#                 <th>Check</th>
-#                 <th>Status</th>
-#                 <th>Details</th>
-#             </tr>
-#         </thead>
-#         <tbody>
-#             {''.join(rows)}
-#         </tbody>
-#     </table>
-# </body>
-# </html>
-# """,
-#     encoding="utf-8",
-# )
