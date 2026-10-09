@@ -118,6 +118,7 @@ def check_sol_2(func):
 # function to check NB1
 
 
+
 def check_doorlopende_doos(update_function):
 
     class FakeParticle:
