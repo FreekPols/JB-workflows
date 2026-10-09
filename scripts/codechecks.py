@@ -25,6 +25,7 @@ def get_tagged_cell(notebook_path, tag):
 
     raise ValueError(f"Geen codecel gevonden met tag {tag!r}")
 
+# CODE BELOW FOR .IPYNB NOTEBOOKS, NOT FOR .MD FILES
 # def get_tagged_cell(notebook_path, tag):
 #     nb = nbformat.read(notebook_path, as_version=4)
 
@@ -33,6 +34,8 @@ def get_tagged_cell(notebook_path, tag):
 #             return cell.source
 
 #     raise ValueError(f"Geen cel gevonden met tag {tag!r}")
+
+
 
 results = []        # Store the results of all checks
 
@@ -49,7 +52,10 @@ source = [
 functions = []
 
 for sources in source:
-    namespace = {}              # Make empty dictionary to hold the namespace after executing the student's code
+    namespace = {
+    "np": np,
+    "dt": 0.1,
+        }           # Make empty dictionary to hold the namespace after executing the student's code
     exec(sources, namespace)
 
     # Search for the functions defined in the student's code.
