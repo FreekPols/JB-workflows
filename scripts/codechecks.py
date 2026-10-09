@@ -32,7 +32,8 @@ results = []        # Store the results of all checks
 source = [
         # get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_1"), 
         # get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_2"),
-        get_tagged_cell("simulations/NB1_deeltjesmodel.md",  "NB1_doorlopendedoos")
+        get_tagged_cell("simulations/NB1_deeltjesmodel.md",  "NB1_doorlopendedoos"),
+        get_tagged_cell("simulations/NB1_deeltjesmodel.md",  "NB1_hardewand"),
         ]
 
 
@@ -115,12 +116,8 @@ def check_sol_2(func):
 
 
 
-# function to check NB1
-
-
-
+# functions to check NB1
 def check_doorlopende_doos(update_function):
-
     class FakeParticle:
         def __init__(self):
             self.r = np.array([0.0, 0.0])
@@ -160,13 +157,60 @@ def check_doorlopende_doos(update_function):
             err_msg=f"Incorrect boundary handling for x={initial_x}"
         )
 
+def check_harde_wanden(update_function):
+
+    class FakeParticle:
+        def __init__(self):
+            self.r = np.array([0.0, 0.0])
+            self.v = np.array([0.0, 0.0])
+
+        def update_position(self):
+            # We test only the boundary logic.
+            pass
+
+    class FakeDot:
+        def set_data(self, x, y):
+            pass
+
+    particle = FakeParticle()
+    dot = FakeDot()
+
+    # Make particle and dot available to update()
+    update_function.__globals__["particle"] = particle
+    update_function.__globals__["dot"] = dot
+
+    test_cases = [
+        # initial_x, initial_vx, expected_vx
+        (0,     5,    5),    # Inside box: velocity unchanged
+        (9,    -5,   -5),    # Inside box: velocity unchanged
+        (11,    5,   -5),    # Outside right: reverse velocity
+        (-11,  -5,    5),    # Outside left: reverse velocity
+    ]
+
+    for initial_x, initial_vx, expected_vx in test_cases:
+
+        particle.r[0] = initial_x
+        particle.r[1] = 0
+
+        particle.v[0] = initial_vx
+        particle.v[1] = 0
+
+        update_function(0)
+
+        np.testing.assert_allclose(
+            particle.v[0],
+            expected_vx,
+            err_msg=(
+                f"Incorrect wall reflection for "
+                f"x={initial_x}, vx={initial_vx}"
+            )
+        )
 
 ######### CHECK THE SOLUTIONS OF THE TAGGED CELLS #########
 # check("sol_check_2", check_sol_2, functions[1])    
 # check("sol_check_1", check_sol_1, functions[0])
-check("NB1_doorlopendedoos", check_doorlopende_doos, student_func)
-
-
+check("NB1_doorlopendedoos", check_doorlopende_doos, functions[0])
+check("NB1_hardewand", check_harde_wanden, functions[1])
 
 
 
