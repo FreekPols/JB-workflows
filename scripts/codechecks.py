@@ -138,10 +138,14 @@ def check_doorlopende_doos(update_function):
     update_function.__globals__["dot"] = dot
 
     test_cases = [
-        (50, 50),
-        (101, -101),
-        (-101, 101),
-        (100, 100),
+        # initial_x, expected_x
+        (0, 0),        # Inside the box
+        (5, 5),        # Inside the box
+        (-5, -5),      # Inside the box
+        (11, -11),     # Outside right boundary
+        (-11, 11),     # Outside left boundary
+        (10, -10),     # Exactly at right boundary
+        (-10, 10),     # Exactly at left boundary
     ]
 
     for initial_x, expected_x in test_cases:
