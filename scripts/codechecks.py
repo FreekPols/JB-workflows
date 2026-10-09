@@ -164,9 +164,7 @@ def check_doorlopende_doos(update_function):
 ######### CHECK THE SOLUTIONS OF THE TAGGED CELLS #########
 # check("sol_check_2", check_sol_2, functions[1])    
 # check("sol_check_1", check_sol_1, functions[0])
-check("NB1_doorlopendedoos", check_doorlopende_doos, update_function)
-
-
+check("NB1_doorlopendedoos", check_doorlopende_doos, student_func)
 
 
 
