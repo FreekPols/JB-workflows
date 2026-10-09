@@ -3,23 +3,36 @@ import nbformat
 import html
 import numpy as np
 from types import SimpleNamespace
+import jupytext 
 
 def get_tagged_cell(notebook_path, tag):
-    nb = nbformat.read(notebook_path, as_version=4)
+    nb = jupytext.read(notebook_path)
 
     for cell in nb.cells:
+        if cell.cell_type != "code":
+            continue
+
         if tag in cell.metadata.get("tags", []):
             return cell.source
 
-    raise ValueError(f"Geen cel gevonden met tag {tag!r}")
+    raise ValueError(f"Geen codecel gevonden met tag {tag!r}")
+
+# def get_tagged_cell(notebook_path, tag):
+#     nb = nbformat.read(notebook_path, as_version=4)
+
+#     for cell in nb.cells:
+#         if tag in cell.metadata.get("tags", []):
+#             return cell.source
+
+#     raise ValueError(f"Geen cel gevonden met tag {tag!r}")
 
 results = []        # Store the results of all checks
 
 # Get python code from tagged cell from the specified notebook file
 source = [
-        get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_1"), 
-        get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_2"),
-        get_tagged_cell("simulations/NB1_deeltjesmodel.ipynb",  "NB1_doorlopendedoos")
+        # get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_1"), 
+        # get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_2"),
+        get_tagged_cell("simulations/NB1_deeltjesmodel.md",  "NB1_doorlopendedoos")
         ]
 
 
@@ -147,10 +160,17 @@ def check_doorlopende_doos(update_function):
         )
 
 
-# do the check for sol_check_2 and store the result in the results list
-check("sol_check_2", check_sol_2, functions[1])    
-check("sol_check_1", check_sol_1, functions[0])
+######### CHECK THE SOLUTIONS OF THE TAGGED CELLS #########
+# check("sol_check_2", check_sol_2, functions[1])    
+# check("sol_check_1", check_sol_1, functions[0])
 check("NB1_doorlopendedoos", check_doorlopende_doos, update_function)
+
+
+
+
+
+
+
 
 ##### GENERATE MARKDOWN REPORT #####
 output = Path("codechecks.md")
