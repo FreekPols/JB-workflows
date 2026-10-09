@@ -2,8 +2,7 @@ from pathlib import Path
 import nbformat
 import html
 import numpy as np
-
-
+from types import SimpleNamespace
 
 def get_tagged_cell(notebook_path, tag):
     nb = nbformat.read(notebook_path, as_version=4)
@@ -14,14 +13,13 @@ def get_tagged_cell(notebook_path, tag):
 
     raise ValueError(f"Geen cel gevonden met tag {tag!r}")
 
-
-
 results = []        # Store the results of all checks
 
 # Get python code from tagged cell from the specified notebook file
 source = [
         get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_1"), 
-        get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_2")
+        get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_2"),
+        get_tagged_cell("simulations/NB1_deeltjesmodel.ipynb",  "NB1_doorlopendedoos")
         ]
 
 
@@ -87,9 +85,6 @@ def check_sol_1(func):
 
     np.testing.assert_array_equal(result, expected)
 
-# do the check for sol_check_1 and store the result in the results list
-
-check("sol_check_1", check_sol_1, functions[0])
 
 
 # function to do the actual check for sol_check_2
@@ -104,9 +99,58 @@ def check_sol_2(func):
 
     np.testing.assert_array_equal(result, expected)
 
+
+
+
+# function to check NB1
+
+
+def check_doorlopende_doos(update_function):
+
+    class FakeParticle:
+        def __init__(self):
+            self.r = np.array([0.0, 0.0])
+
+        def update_position(self):
+            # We test only the boundary logic.
+            pass
+
+    class FakeDot:
+        def set_data(self, x, y):
+            pass
+
+    particle = FakeParticle()
+    dot = FakeDot()
+
+    # Make particle and dot available to update()
+    update_function.__globals__["particle"] = particle
+    update_function.__globals__["dot"] = dot
+
+    test_cases = [
+        (50, 50),
+        (101, -101),
+        (-101, 101),
+        (100, 100),
+    ]
+
+    for initial_x, expected_x in test_cases:
+
+        particle.r[0] = initial_x
+        particle.r[1] = 0
+
+        update_function(0)
+
+        np.testing.assert_allclose(
+            particle.r[0],
+            expected_x,
+            err_msg=f"Incorrect boundary handling for x={initial_x}"
+        )
+
+
 # do the check for sol_check_2 and store the result in the results list
 check("sol_check_2", check_sol_2, functions[1])    
-
+check("sol_check_1", check_sol_1, functions[0])
+check("NB1_doorlopendedoos", check_doorlopende_doos, update_function)
 
 ##### GENERATE MARKDOWN REPORT #####
 output = Path("codechecks.md")
