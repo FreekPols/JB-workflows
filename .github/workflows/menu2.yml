@@ -1,0 +1,174 @@
+# Build pages with Python execute
+
+
+name: Buildscript with menu
+
+on:
+  workflow_call:
+    inputs:
+      build_pdf:
+        description: "Build PDF"
+        required: false
+        type: boolean
+        default: false
+      execute_python: 
+        description: "Execute Python code"
+        required: false
+        type: boolean
+        default: false
+      run_nb_checks: 
+        description: "Run notebook checks"
+        required: false
+        type: boolean
+        default: false
+      run_fig_checks: 
+        description: "Run figure checks"
+        required: false
+        type: boolean
+        default: false
+
+      run_code_checks: 
+        description: "Run code cell checks"
+        required: false
+        type: boolean
+        default: false
+env:
+  BASE_URL: /${{ github.event.repository.name }}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+
+    env:
+      TYPST_FONT_PATHS: ${{ github.workspace }}/typst_template/src/assets/fonts
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Checkout JB workflows
+        uses: actions/checkout@v5
+        with:
+            repository: FreekPols/JB-workflows
+            path: .jb-workflows
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Install MyST
+        run: npm install -g mystmd
+
+      - name: Install ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
+##### ---- SETUP PYTHON ---- ####
+      - name: Set up Python
+        if: ${{ inputs.build_pdf || inputs.execute_python || inputs.run_nb_checks || inputs.run_fig_checks }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'   # or your version
+
+      - name: Install Python dependencies
+        if: ${{ inputs.build_pdf || inputs.execute_python || inputs.run_nb_checks || inputs.run_fig_checks }}
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install jupyter-server nbclient nbformat ipykernel jupyter-client ipython jupytext
+          pip install matplotlib numpy pandas scipy plotly ipywidgets
+          python -m ipykernel install --user --name=python3
+      
+      - name: Automated file checks
+        if: ${{ inputs.run_nb_checks }}
+        run: python .jb-workflows/scripts/check.py
+        
+      - name: Check output codecells
+        if: ${{ inputs.run_code_checks }}
+        run: python .jb-workflows/scripts/codechecks.py
+
+
+#### ---- BUILD PDF ---- ####      
+      - name: Checkout Typst template fonts
+        if: ${{ inputs.build_pdf }}
+        uses: actions/checkout@v5
+        with:
+          repository: TUD-JB-OS/typst_template
+          ref: main
+          path: typst_template
+
+      - name: Setup Typst
+        if: ${{ inputs.build_pdf }}
+        uses: typst-community/setup-typst@v4
+
+      - name: Build PDF
+        if: ${{ inputs.build_pdf }}
+        run: |
+          myst build --typst > build.log 2>&1 || true
+                  
+      - name: Upload Output PDF as Artifact
+        if: ${{ inputs.build_pdf }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Output PDF
+          path: exports/*.pdf
+          compression-level: 0
+
+      - name: Write build errors to errorlog.md
+        if: ${{ inputs.build_pdf }}
+        run: |
+          echo "# PDF Build Error Log" > errorlog.md
+          echo "" >> errorlog.md
+          echo "**Build time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> errorlog.md
+          echo "" >> errorlog.md
+          echo '```text' >> errorlog.md
+          grep -iE "error|warning" build.log >> errorlog.md || echo "No errors or warnings." >> errorlog.md
+          echo '```' >> errorlog.md
+
+
+##### ---- BUILD HTML ---- ####          
+      - name: Build HTML Assets with Python execution
+        if: ${{ inputs.execute_python }}
+        run: myst build --html --execute 2>&1 | tee build.log
+
+      - name: Build HTML Assets without Python execution
+        if: ${{ !inputs.execute_python }}
+        run: myst build --html  2>&1 | tee build.log
+
+      - name: Generate MyST error report
+        run: python .jb-workflows/scripts/errorlog.py
+
+#### ---- ADD CHECK REPORT ---- ####
+      # not needed when reporting errors using markdown file
+      # - name: Add check report
+      #   if: ${{ inputs.run_code_checks }}
+      #   run: cp _checks/checks.html _build/html/checks.html
+
+      - name: Automated figure checks
+        if: ${{ inputs.run_fig_checks }}
+        run: python .jb-workflows/scripts/listoffigs.py
+
+#### ---- DEPLOY TO GITHUB PAGES ---- ####        
+      - name: Upload HTML artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: ./_build/html
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
