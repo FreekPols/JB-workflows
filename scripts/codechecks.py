@@ -86,32 +86,15 @@ def check_cell(name, notebook_path, test_function, variable=None):
 
 
 # Run all checks
-notebook = "simulations/NB1_deeltjesmodel.md"
+notebook_1 = "simulations/NB1_deeltjesmodel.md"
 
-check_cell(
-    "NB1_doorlopendedoos",
-    notebook,
-    check_doorlopende_doos
-)
+check_cell("NB1_doorlopendedoos", notebook_1, check_doorlopende_doos)
 
-check_cell(
-    "NB1_hardewand",
-    notebook,
-    check_harde_wanden
-)
+check_cell("NB1_hardewand", notebook_1, check_harde_wanden)
 
-check_cell(
-    "NB1_botsingsvoorwaarde",
-    notebook,
-    check_botsingsvoorwaarde
-)
+check_cell("NB1_botsingsvoorwaarde", notebook_1, check_botsingsvoorwaarde)
 
-check_cell(
-    "NB1_eindantwoord",
-    notebook,
-    check_eindantwoord,
-    variable="num_botsingen"
-)
+check_cell("NB1_eindantwoord", notebook_1, check_eindantwoord, variable="num_botsingen")
 
 # results = []        # Store the results of all checks
 
