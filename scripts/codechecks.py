@@ -36,82 +36,157 @@ def get_tagged_cell(notebook_path, tag):
 
 #     raise ValueError(f"Geen cel gevonden met tag {tag!r}")
 
+results = []
 
 
-results = []        # Store the results of all checks
-
-# Get python code from tagged cell from the specified notebook file
-source = [
-        # get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_1"), 
-        # get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_2"),
-        get_tagged_cell("simulations/NB1_deeltjesmodel.md", "NB1_doorlopendedoos"),
-        get_tagged_cell("simulations/NB1_deeltjesmodel.md", "NB1_hardewand"),
-        get_tagged_cell("simulations/NB1_deeltjesmodel.md", "NB1_botsingsvoorwaarde"),
-        get_tagged_cell("simulations/NB1_deeltjesmodel.md", "NB1_eindantwoord"),
-        ]
-
-
-functions = []
-
-for sources in source:
-    namespace = {
-    "np": np,
-    "dt": 0.1,
-        }           # Make empty dictionary to hold the namespace after executing the student's code
-    exec(sources, namespace)
-
-    # Search for the functions defined in the student's code.
-    found_functions = [
-        value
-        for name, value in namespace.items()
-        if callable(value) and not name.startswith("__")
-    ]
-
-
-
-    # Check that there is exactly one function defined in the student's code.
-    if len(found_functions) != 1:
-        raise ValueError(
-            f"Expect only one function, "
-            f"but found {len(found_functions)}."
-        )
-
-    functions.append(found_functions[0])
-
-# Use the first (and only) function found in the student's code.
-student_func = functions[0]
-
-# General function to run a check and store the result in the results list.
-def check(name, func, *args):
+def check_cell(name, notebook_path, test_function, variable=None):
 
     try:
-        func(*args)             # do the check
+        # Find the tagged cell
+        source = get_tagged_cell(notebook_path, name)
 
-        results.append(
-            (name, True, "")    # if no exception was raised, the check passed
-        )
+        # Provide dependencies for the student's code
+        namespace = {
+            "np": np,
+            "dt": 0.1,
+        }
 
-        print(f"PASS: {name}")  # else copy error message to results and print FAIL
+        # Execute the student's code
+        # Syntax errors are now caught by try/except
+        exec(source, namespace)
+
+        if variable is not None:
+            # Retrieve a variable, e.g. num_botsingen
+            student_object = namespace[variable]
+
+        else:
+            # Retrieve the function or class defined by the student
+            objects = [
+                value
+                for key, value in namespace.items()
+                if callable(value) and not key.startswith("__")
+            ]
+
+            if len(objects) != 1:
+                raise ValueError(
+                    f"Expected one function or class, found {len(objects)}."
+                )
+
+            student_object = objects[0]
+
+        # Run the corresponding test from NB1.py
+        test_function(student_object)
+
+        results.append((name, True, ""))
+        print(f"PASS: {name}")
 
     except Exception as exc:
-
-        # Store the name of the check, a False value indicating failure, and the exception message in the results list.
-        results.append(
-            (name, False, str(exc))
-        )
-
+        results.append((name, False, str(exc)))
         print(f"FAIL: {name}: {exc}")
 
 
+# Run all checks
+notebook = "simulations/NB1_deeltjesmodel.md"
+
+check_cell(
+    "NB1_doorlopendedoos",
+    notebook,
+    check_doorlopende_doos
+)
+
+check_cell(
+    "NB1_hardewand",
+    notebook,
+    check_harde_wanden
+)
+
+check_cell(
+    "NB1_botsingsvoorwaarde",
+    notebook,
+    check_botsingsvoorwaarde
+)
+
+check_cell(
+    "NB1_eindantwoord",
+    notebook,
+    check_eindantwoord,
+    variable="num_botsingen"
+)
+
+# results = []        # Store the results of all checks
+
+# # Get python code from tagged cell from the specified notebook file
+# source = [
+#         # get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_1"), 
+#         # get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_2"),
+#         get_tagged_cell("simulations/NB1_deeltjesmodel.md", "NB1_doorlopendedoos"),
+#         get_tagged_cell("simulations/NB1_deeltjesmodel.md", "NB1_hardewand"),
+#         get_tagged_cell("simulations/NB1_deeltjesmodel.md", "NB1_botsingsvoorwaarde"),
+#         get_tagged_cell("simulations/NB1_deeltjesmodel.md", "NB1_eindantwoord"),
+#         ]
+
+
+# functions = []
+
+# for sources in source:
+#     namespace = {
+#     "np": np,
+#     "dt": 0.1,
+#         }           # Make empty dictionary to hold the namespace after executing the student's code
+#     exec(sources, namespace)
+
+#     # Search for the functions defined in the student's code.
+#     found_functions = [
+#         value
+#         for name, value in namespace.items()
+#         if callable(value) and not name.startswith("__")
+#     ]
 
 
 
-######### CHECK THE SOLUTIONS OF THE TAGGED CELLS #########
+#     # Check that there is exactly one function defined in the student's code.
+#     if len(found_functions) != 1:
+#         raise ValueError(
+#             f"Expect only one function, "
+#             f"but found {len(found_functions)}."
+#         )
 
-check("NB1_doorlopendedoos", check_doorlopende_doos, functions[0])
-check("NB1_hardewand", check_harde_wanden, functions[1])
-check("NB1_botsingsvoorwaarde", check_botsingsvoorwaarde, functions[2])
-check("NB1_eindantwoord", check_eindantwoord, functions[3])
+#     functions.append(found_functions[0])
+
+# # Use the first (and only) function found in the student's code.
+# student_func = functions[0]
+
+# # General function to run a check and store the result in the results list.
+# def check(name, func, *args):
+
+#     try:
+#         func(*args)             # do the check
+
+#         results.append(
+#             (name, True, "")    # if no exception was raised, the check passed
+#         )
+
+#         print(f"PASS: {name}")  # else copy error message to results and print FAIL
+
+#     except Exception as exc:
+
+#         # Store the name of the check, a False value indicating failure, and the exception message in the results list.
+#         results.append(
+#             (name, False, str(exc))
+#         )
+
+#         print(f"FAIL: {name}: {exc}")
+
+
+
+
+
+# ######### CHECK THE SOLUTIONS OF THE TAGGED CELLS #########
+
+# check("NB1_doorlopendedoos", check_doorlopende_doos, functions[0])
+# check("NB1_hardewand", check_harde_wanden, functions[1])
+# check("NB1_botsingsvoorwaarde", check_botsingsvoorwaarde, functions[2])
+# check("NB1_eindantwoord", check_eindantwoord, functions[3])
 
 
 ##### GENERATE MARKDOWN REPORT #####
