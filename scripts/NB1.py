@@ -125,3 +125,10 @@ def check_botsingsvoorwaarde(ParticleClass):
             f"r1={r1}, R1={R1}, r2={r2}, R2={R2}. "
             f"Expected {expected}, got {result}."
         )
+
+
+def check_eindantwoord(num_botsingen):
+    assert num_botsingen == 22, (
+        f"Incorrect number of collisions: "
+        f"expected XX, got {num_botsingen}."
+    )        

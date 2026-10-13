@@ -10,6 +10,7 @@ from NB1 import (
     check_doorlopende_doos,
     check_harde_wanden,
     check_botsingsvoorwaarde,
+    check_eindantwoord,
 )
 
 
@@ -43,9 +44,10 @@ results = []        # Store the results of all checks
 source = [
         # get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_1"), 
         # get_tagged_cell("simulations/opdracht.ipynb",  "sol_check_2"),
-        get_tagged_cell("simulations/NB1_deeltjesmodel.md",  "NB1_doorlopendedoos"),
-        get_tagged_cell("simulations/NB1_deeltjesmodel.md",  "NB1_hardewand"),
+        get_tagged_cell("simulations/NB1_deeltjesmodel.md", "NB1_doorlopendedoos"),
+        get_tagged_cell("simulations/NB1_deeltjesmodel.md", "NB1_hardewand"),
         get_tagged_cell("simulations/NB1_deeltjesmodel.md", "NB1_botsingsvoorwaarde"),
+        get_tagged_cell("simulations/NB1_deeltjesmodel.md", "NB1_eindantwoord"),
         ]
 
 
