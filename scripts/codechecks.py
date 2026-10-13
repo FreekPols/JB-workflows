@@ -111,7 +111,7 @@ def check(name, func, *args):
 check("NB1_doorlopendedoos", check_doorlopende_doos, functions[0])
 check("NB1_hardewand", check_harde_wanden, functions[1])
 check("NB1_botsingsvoorwaarde", check_botsingsvoorwaarde, functions[2])
-
+check("NB1_eindantwoord", check_eindantwoord, functions[3])
 
 
 ##### GENERATE MARKDOWN REPORT #####
