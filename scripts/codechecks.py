@@ -147,15 +147,16 @@ cell_checks = {
 }
 
 # Run all checks
-for name, test_function, mode, variable, init_tags in cell_checks[notebook]:
-    check_cell(
-        path,
-        name,
-        test_function,
-        mode=mode,
-        variable=variable,
-        init_tags=init_tags,
-    )
+for notebook, path in notebook_file_paths.items():
+    for name, test_function, mode, variable, init_tags in cell_checks[notebook]:
+        check_cell(
+            path,
+            name,
+            test_function,
+            mode=mode,
+            variable=variable,
+            init_tags=init_tags,
+        )
 
 
 # Generate Markdown report
