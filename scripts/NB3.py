@@ -35,3 +35,27 @@ def check_tempfun(temperature_function):
                 f"kinetic energies {energies}"
             )
         )
+
+
+
+def check_const_temp(temperatures):
+
+    temperatures = np.asarray(temperatures, dtype=float)
+
+    # Check that temperatures have been recorded
+    assert temperatures.size == 100, (
+        f"Expected 100 temperature measurements, "
+        f"got {temperatures.size}."
+    )
+
+    # Check for invalid values
+    assert np.all(np.isfinite(temperatures)), (
+        "Temperature array contains NaN or infinite values."
+    )
+
+    # Check that temperature remains between 290 and 300 K
+    assert np.all((temperatures >= 290) & (temperatures <= 300)), (
+        f"Temperature should remain between 290 and 300 K. "
+        f"Minimum: {temperatures.min():.2f} K, "
+        f"maximum: {temperatures.max():.2f} K."
+    )        
