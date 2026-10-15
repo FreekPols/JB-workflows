@@ -135,7 +135,7 @@ NB2_cell_checks = [
 ]
 
 NB3_cell_checks = [
-    ("NB3_tempfun", check_tempfun, "function", None),
+    ("NB3_tempfun", check_tempfun, "function", None, []),
     ("NB3_check_const_temp", check_const_temp, "variable", "temperatures",
         ["NB3_init_1", "NB3_init_2", "NB3_init_3", "NB3_tempfun", ],),
 ]
