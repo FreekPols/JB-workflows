@@ -21,6 +21,11 @@ from NB2 import (
 from NB3 import (
     check_tempfun,
     check_const_temp,
+    check_plot_pres,
+)
+
+from NB4 import (
+    check_uniform_particles,
 )
 
 def get_tagged_cell(notebook_path, tag):
@@ -66,6 +71,29 @@ def check_cell(
         if mode == "source":
             student_object = source
 
+        if mode == "pressure_loop":
+
+            calls = {"create": 0, "steps": 0}
+
+            def fake_create_particles(particles):
+                calls["create"] += 1
+                particles.append(object())
+
+            def fake_take_time_step(particles):
+                calls["steps"] += 1
+                namespace["pressure"] = float(calls["steps"])
+
+            namespace["create_particles"] = fake_create_particles
+            namespace["take_time_step"] = fake_take_time_step
+
+            exec(source, namespace)
+
+            test_function(namespace["pressures"], calls)
+
+            results.append((name, True, ""))
+            print(f"PASS: {name}")
+            return
+        
         else:
             # Execute exercise cell in the SAME namespace
             exec(source, namespace)
@@ -120,6 +148,7 @@ notebook_file_paths = {
     "NB1": "simulations/NB1_deeltjesmodel.md",
     "NB2": "simulations/NB2_brownianmotion.md",
     "NB3": "simulations/NB3_druktemp.md",
+    "NB4": "simulations/NB4_boltzmann.md",
 }
 
 NB1_cell_checks = [
@@ -138,12 +167,18 @@ NB3_cell_checks = [
     ("NB3_tempfun", check_tempfun, "function", None, []),
     ("NB3_check_const_temp", check_const_temp, "variable", "temperatures",
         ["NB3_init_1", "NB3_init_2", "NB3_init_3", "NB3_init_4", "NB3_tempfun", ],),
+    ("NB3_plot_pres", check_plot_pres, "pressure_loop", None, []),
+]
+
+NB4_cell_checks = [
+    ("NB4_uniform_particles", check_uniform_particles, "function", None, []),
 ]
 
 cell_checks = {
     "NB1": NB1_cell_checks,
     "NB2": NB2_cell_checks,
     "NB3": NB3_cell_checks,
+    "NB4": NB4_cell_checks,
 }
 
 # Run all checks
