@@ -26,6 +26,9 @@ from NB3 import (
 
 from NB4 import (
     check_uniform_particles,
+    check_numsteps,
+    check_maxwell2d,
+    check_maxwell_fit,
 )
 
 def get_tagged_cell(notebook_path, tag):
@@ -71,7 +74,7 @@ def check_cell(
         if mode == "source":
             student_object = source
 
-        if mode == "pressure_loop":
+        elif mode == "pressure_loop":
 
             calls = {"create": 0, "steps": 0}
 
@@ -93,6 +96,31 @@ def check_cell(
             results.append((name, True, ""))
             print(f"PASS: {name}")
             return
+
+        elif mode == "function_only":
+            import ast
+
+            tree = ast.parse(source)
+
+            functions = [
+                node
+                for node in tree.body
+                if isinstance(node, ast.FunctionDef)
+            ]
+
+            if len(functions) != 1:
+                raise ValueError(
+                    f"Expected one function, found {len(functions)}."
+                )
+
+            function_module = ast.Module(
+                body=functions,
+                type_ignores=[]
+            )
+
+            exec(compile(function_module, "<student>", "exec"), namespace)
+
+            student_object = namespace[functions[0].name]
         
         else:
             # Execute exercise cell in the SAME namespace
@@ -172,6 +200,9 @@ NB3_cell_checks = [
 
 NB4_cell_checks = [
     ("NB4_uniform_particles", check_uniform_particles, "function", None, []),
+    ("NB4_numsteps", check_numsteps, "source", None, []),
+    ("NB4_maxwell2d", check_maxwell2d, "function_only", None, []),
+    ("NB4_maxwell2d", check_maxwell_fit, "variable", "popt", ["NB4_init_1", "NB4_init_2", "NB4_init_3", "NB4_init_4","NB4_uniform_particles",]),
 ]
 
 cell_checks = {

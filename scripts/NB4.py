@@ -87,3 +87,100 @@ def check_uniform_particles(create_uniform_particles):
         ), (
             f"Particle {i} is outside the allowed box boundaries."
         )
+
+
+def check_numsteps(source):
+
+    test_cases = [
+        # BOX_SIZE_0, V_0, DT
+        (10.0, 2.0, 0.1),
+        (20.0, 4.0, 0.2),
+        (15.0, 3.0, 0.05),
+        (12.0, 5.0, 0.3),
+    ]
+
+    for box_size, v0, dt in test_cases:
+
+        namespace = {
+            "BOX_SIZE_0": box_size,
+            "V_0": v0,
+            "DT": dt,
+        }
+
+        # Execute student's code with test parameters
+        exec(source, namespace)
+
+        assert "num_steps" in namespace, (
+            "The variable num_steps was not defined."
+        )
+
+        expected = round(2 * box_size / (v0 * dt))
+        result = namespace["num_steps"]
+
+        assert result == expected, (
+            f"Incorrect num_steps for BOX_SIZE_0={box_size}, "
+            f"V_0={v0}, DT={dt}. "
+            f"Expected {expected}, got {result}."
+        )
+
+
+def check_maxwell2d(maxwell2d):
+
+    test_cases = [
+        # v, a
+        (0.0, 1.0),
+        (0.5, 1.0),
+        (1.0, 2.0),
+        (2.0, 0.5),
+        (3.0, 1.5),
+    ]
+
+    for v, a in test_cases:
+        expected = a * v * np.exp(-a * v**2 / 2)
+        result = maxwell2d(v, a)
+
+        np.testing.assert_allclose(
+            result,
+            expected,
+            rtol=1e-5,
+            err_msg=f"Incorrect Maxwell distribution for v={v}, a={a}."
+        )
+
+    # Check that the function also supports NumPy arrays
+    v = np.linspace(0, 5, 50)
+    a = 1.5
+
+    expected = a * v * np.exp(-a * v**2 / 2)
+    result = maxwell2d(v, a)
+
+    np.testing.assert_allclose(
+        result,
+        expected,
+        rtol=1e-5,
+        err_msg="maxwell2d() should support NumPy arrays."
+    )
+
+
+def check_maxwell_fit(popt):
+
+    expected = 1.88190321
+    tolerance = 0.15  # 15% relative tolerance
+
+    popt = np.asarray(popt, dtype=float)
+
+    assert popt.size >= 1, (
+        "No fitted parameter found."
+    )
+
+    fitted_a = popt[0]
+
+    np.testing.assert_allclose(
+        fitted_a,
+        expected,
+        rtol=tolerance,
+        err_msg=(
+            f"Incorrect Maxwell fit parameter. "
+            f"Expected approximately {expected:.4f}, "
+            f"got {fitted_a:.4f}."
+        )
+    )
