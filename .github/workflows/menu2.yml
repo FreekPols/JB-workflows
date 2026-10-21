@@ -32,6 +32,12 @@ on:
         required: false
         type: boolean
         default: false
+
+      run_git_user_log:
+        description: "Run git user log"
+        required: false
+        type: boolean
+        default: false  
 env:
   BASE_URL: /${{ github.event.repository.name }}
 
@@ -80,13 +86,13 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y imagemagick
 ##### ---- SETUP PYTHON ---- ####
       - name: Set up Python
-        if: ${{ inputs.build_pdf || inputs.execute_python || inputs.run_nb_checks || inputs.run_fig_checks }}
+        if: ${{ inputs.build_pdf || inputs.execute_python || inputs.run_nb_checks || inputs.run_fig_checks || inputs.run_fig_checks || inputs.run_git_user_log }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'   # or your version
 
       - name: Install Python dependencies
-        if: ${{ inputs.build_pdf || inputs.execute_python || inputs.run_nb_checks || inputs.run_fig_checks }}
+        if: ${{ inputs.build_pdf || inputs.execute_python || inputs.run_nb_checks || inputs.run_fig_checks || inputs.run_git_user_log }}
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
@@ -101,6 +107,10 @@ jobs:
       - name: Check output codecells
         if: ${{ inputs.run_code_checks }}
         run: python .jb-workflows/scripts/codechecks.py
+
+      - name: Check git user log
+        if: ${{ inputs.run_git_user_log }}
+        run: python .jb-workflows/scripts/gituserlog.py
 
 
 #### ---- BUILD PDF ---- ####      

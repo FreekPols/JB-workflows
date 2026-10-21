@@ -19,6 +19,7 @@ jobs:
       run_nb_checks: false
       run_fig_checks: false
       run_code_checks: false
+      run_git_user_log: false
 
           # FreekPols/JB-workflows/.github/workflows/execute.yml@main           # Python execute, no pdf
           # FreekPols/JB-workflows/.github/workflows/pdf_workflow.yml@main      # pdf and execute
