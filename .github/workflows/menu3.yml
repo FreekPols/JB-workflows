@@ -110,7 +110,21 @@ jobs:
         if: ${{ inputs.run_code_checks }}
         run: python .jb-workflows/scripts/codechecks.py
 
-        
+      - name: Debug Git history
+        if: ${{ inputs.run_git_user_log }}
+        run: |
+          echo "Repository:"
+          git remote -v
+
+          echo "Branches:"
+          git branch -a
+
+          echo "Total commits:"
+          git rev-list --all --count
+
+          echo "Recent commits:"
+          git log --all --oneline -20
+                  
       - name: Fetch all branches
         if: ${{ inputs.run_git_user_log }}
         run: |
