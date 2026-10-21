@@ -59,3 +59,24 @@ def check_const_temp(temperatures):
         f"Minimum: {temperatures.min():.2f} K, "
         f"maximum: {temperatures.max():.2f} K."
     )        
+
+def check_plot_pres(pressures, calls):
+
+    expected = np.arange(1, 101, dtype=float)
+
+    # Check initialization
+    assert calls["create"] == 1, (
+        "create_particles() should be called exactly once."
+    )
+
+    # Check number of time steps
+    assert calls["steps"] == 100, (
+        f"Expected 100 time steps, got {calls['steps']}."
+    )
+
+    # Check that pressure is recorded at every time step
+    np.testing.assert_allclose(
+        pressures,
+        expected,
+        err_msg="Pressure was not recorded correctly at each time step."
+    )
