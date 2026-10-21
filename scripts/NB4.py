@@ -184,3 +184,13 @@ def check_maxwell_fit(popt):
             f"got {fitted_a:.4f}."
         )
     )
+
+def check_excellent(source):
+    # Ignore empty lines and comments
+    lines = [
+        line.strip()
+        for line in source.splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+
+    assert lines, "The NB4_excellent cell is empty."

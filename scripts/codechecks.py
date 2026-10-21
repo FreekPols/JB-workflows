@@ -29,6 +29,7 @@ from NB4 import (
     check_numsteps,
     check_maxwell2d,
     check_maxwell_fit,
+    check_excellent,
 )
 
 def get_tagged_cell(notebook_path, tag):
@@ -203,6 +204,7 @@ NB4_cell_checks = [
     ("NB4_numsteps", check_numsteps, "source", None, []),
     ("NB4_maxwell2d", check_maxwell2d, "function_only", None, []),
     ("NB4_maxwell2d", check_maxwell_fit, "variable", "popt", ["NB4_init_1", "NB4_init_2", "NB4_init_3", "NB4_init_4","NB4_uniform_particles",]),
+    ("NB4_excellent", check_excellent, "source", None, []),
 ]
 
 cell_checks = {
