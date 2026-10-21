@@ -33,11 +33,7 @@ on:
         type: boolean
         default: false
 
-      run_git_user_log:
-        description: "Run git user log"
-        required: false
-        type: boolean
-        default: false  
+
 env:
   BASE_URL: /${{ github.event.repository.name }}
 
@@ -64,8 +60,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
 
       - name: Checkout JB workflows
         uses: actions/checkout@v5
