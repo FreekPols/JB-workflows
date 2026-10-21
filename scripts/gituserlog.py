@@ -1,35 +1,3 @@
-
-import csv
-import json
-import subprocess
-import fnmatch
-from pathlib import Path
-
-CSV_FILE = "allowed_users.csv"
-OUTPUT_FILE = "gitlog.md"
-
-
-def load_permissions():
-    permissions = {}
-
-    with open(CSV_FILE, newline="", encoding="utf-8") as file:
-        reader = csv.DictReader(file)
-
-        for row in reader:
-            username = row["username"].strip().lower()
-            branches = json.loads(row["branches"])
-
-            permissions[username] = branches
-
-    return permissions
-
-
-def get_git_log():
-    command = [
-        "git", "log",
-        "--all",
-        "--date=short",
-        "--pretty=format:%ad%x1f%H%x1f%an%x1f%D%x1e"
     ]
 
     result = subprocess.run(
@@ -47,18 +15,18 @@ def get_git_log():
 
         parts = entry.strip().split("\x1f")
 
-        if len(parts) != 4:
+        if len(parts) != 3:
             continue
 
-        date, commit_id, username, refs = parts
+        date, commit_id, username = parts
 
         commits.append({
             "date": date,
             "id": commit_id,
-            "username": username,
-            "refs": refs
+            "username": username
         })
 
+    print(f"Found {len(commits)} commits")
     return commits
 
 
