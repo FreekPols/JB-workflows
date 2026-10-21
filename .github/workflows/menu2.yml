@@ -98,6 +98,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install jupyter-server nbclient nbformat ipykernel jupyter-client ipython jupytext
           pip install matplotlib numpy pandas scipy plotly ipywidgets
+          pip install csv json subprocess fnmatch pathlib 
           python -m ipykernel install --user --name=python3
       
       - name: Automated file checks
