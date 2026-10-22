@@ -1,143 +1,118 @@
+"""Generate gitlog.md with conservative branch attribution.
+
+Git commits do not record their original branch. A branch is inferred only
+when exactly one currently existing branch contains the commit.
+"""
 
 import csv
+import fnmatch
 import json
 import subprocess
-import fnmatch
 from pathlib import Path
 
-CSV_FILE = "allowed_users.csv"
-OUTPUT_FILE = "gitlog.md"
+CSV_FILE = Path('allowed_users.csv')
+OUTPUT_FILE = Path('gitlog.md')
 
+
+def git(*args):
+    return subprocess.run(['git', *args], capture_output=True, text=True,
+                          check=True).stdout
 
 
 def load_permissions():
     permissions = {}
-
-    with open(CSV_FILE, newline="", encoding="utf-8") as file:
-        reader = csv.DictReader(file)
-
-        for row in reader:
-            username = row["username"].strip().lower()
-            branches = json.loads(row["branches"])
-
-            permissions[username] = branches
-
+    with CSV_FILE.open(newline='', encoding='utf-8-sig') as handle:
+        for row in csv.DictReader(handle):
+            username = row['username'].strip().casefold()
+            patterns = json.loads(row['branches'])
+            if not isinstance(patterns, list) or not all(isinstance(p, str) for p in patterns):
+                raise ValueError(f'Invalid branches for {username}: expected JSON array')
+            permissions[username] = patterns
     return permissions
 
-def get_git_log():
-    command = [
-        "git", "log",
-        "--all",
-        "--date=short",
-        "--pretty=format:%ad%x1f%H%x1f%an%x1e"
-    ]
+def list_branches():
+    # Prefer remote branches; local checkout branches often duplicate them.
+    remote_refs = git('for-each-ref', '--format=%(refname)', 'refs/remotes').splitlines()
+    branches = {}
+    for ref in remote_refs:
+        if ref.endswith('/HEAD'):
+            continue
+        name = ref.removeprefix('refs/remotes/')
+        if '/' not in name:
+            continue
+        remote, short_name = name.split('/', 1)
+        if remote == 'origin':
+            branches[short_name] = ref
+    # Fallback for repositories without origin remote refs.
+    if not branches:
+        for ref in git('for-each-ref', '--format=%(refname)', 'refs/heads').splitlines():
+            branches[ref.removeprefix('refs/heads/')] = ref
+    return branches
 
-    result = subprocess.run(
-        command,
-        capture_output=True,
-        text=True,
-        check=True
-    )
-
+def get_commits():
+    output = git('log', '--all', '--date=short',
+                 '--pretty=format:%ad%x1f%H%x1f%an%x1e')
     commits = []
-
-    for entry in result.stdout.strip("\x1e\n").split("\x1e"):
-        if not entry.strip():
+    for record in output.split('\x1e'):
+        record = record.strip('\r\n')
+        if not record:
             continue
-
-        parts = entry.strip().split("\x1f")
-
-        if len(parts) != 3:
-            continue
-
-        date, commit_id, username = parts
-
-        commits.append({
-            "date": date,
-            "id": commit_id,
-            "username": username
-        })
-
-    print(f"Found {len(commits)} commits")
+        fields = record.split('\x1f')
+        if len(fields) != 3:
+            raise ValueError(f'Unexpected git log record: {record!r}')
+        date, sha, author = fields
+        commits.append((date, sha, author))
     return commits
 
 
-def get_branches(commit_id):
-    result = subprocess.run(
-        [
-            "git", "branch",
-            "-a", "--contains", commit_id,
-            "--format=%(refname:short)"
-        ],
-        capture_output=True,
-        text=True,
-        check=True
-    )
+def branch_memberships(branches):
+    membership = {}
+    for name, ref in branches.items():
+        for sha in git('rev-list', ref).splitlines():
+            membership.setdefault(sha, set()).add(name)
+    return membership
 
-    branches = []
-
-    for branch in result.stdout.splitlines():
-        branch = branch.strip()
-
-        if branch.startswith("origin/"):
-            branch = branch[len("origin/"):]
-
-        if branch and branch not in branches:
-            branches.append(branch)
-
-    return branches
-
-
-def is_allowed(username, branch, permissions):
-    allowed_branches = permissions.get(
-        username.strip().lower(), []
-    )
-
-    return any(
-        fnmatch.fnmatchcase(branch, pattern)
-        for pattern in allowed_branches
-    )
+def escape_md(value):
+    return str(value).replace('|', '\\|').replace('\n', ' ')
 
 
 def generate_markdown():
     permissions = load_permissions()
-    commits = get_git_log()
+    commits = get_commits()
+    branches = list_branches()
+    memberships = branch_memberships(branches)
 
     lines = [
-        "| Commit date | Commit ID | Committed user | Branch | Allowed |",
-        "|---|---|---|---|---|"
+        '| Commit date | Commit ID | Committed user | Branch | Allowed |',
+        '|---|---|---|---|---|',
     ]
-
-    for commit in commits:
-        branches = get_branches(commit["id"])
-
-        if not branches:
-            branches = ["unknown"]
-
-        for branch in branches:
-            allowed = is_allowed(
-                commit["username"],
-                branch,
-                permissions
-            )
-
-            status = "Yes" if allowed else "No"
-
-            lines.append(
-                f"| {commit['date']} "
-                f"| `{commit['id'][:12]}` "
-                f"| {commit['username']} "
-                f"| {branch} "
-                f"| {status} |"
-            )
-
-    Path(OUTPUT_FILE).write_text(
-        "\n".join(lines) + "\n",
-        encoding="utf-8"
-    )
-
-    print(f"Report generated: {OUTPUT_FILE}")
+    known = ambiguous = 0
+    for date, sha, author in commits:
+        candidates = memberships.get(sha, set())
+        if len(candidates) == 1:
+            branch = next(iter(candidates))
+            # A unique containing branch is only an inference, not proof.
+            allowed = any(fnmatch.fnmatchcase(branch, pattern)
+                          for pattern in permissions.get(author.strip().casefold(), []))
+            status = 'Yes*' if allowed else 'No*'
+            known += 1
+        else:
+            branch = 'unknown'
+            status = 'Unknown'
+            ambiguous += 1
+        lines.append(f'| {escape_md(date)} | `{sha[:12]}` | {escape_md(author)} '
+                     f'| {escape_md(branch)} | {status} |')
+        
+    lines.extend([
+        '',
+        '*`Yes*` / `No*` is a **provisional** permission check: the branch is inferred '
+        'from current branch reachability, not proven as the original branch. '
+        '`Unknown` means the original branch cannot be determined from the available refs.*',
+    ])
+    OUTPUT_FILE.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+    print(f'Report generated: {OUTPUT_FILE} ({len(commits)} commits, '
+          f'{known} inferred, {ambiguous} unknown; {len(branches)} branches)')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     generate_markdown()
