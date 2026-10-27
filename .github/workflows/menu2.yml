@@ -102,8 +102,9 @@ jobs:
         
       - name: Check output codecells
         if: ${{ inputs.run_code_checks }}
+        env:
+          PYTHONPATH: ${{ github.workspace }}/.jb-workflows
         run: python .jb-workflows/scripts/codechecks.py
-        working-directory: .jb-workflows
 
 
 #### ---- BUILD PDF ---- ####      
