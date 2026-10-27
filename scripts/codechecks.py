@@ -3,7 +3,7 @@ import numpy as np
 #import jupytext
 import matplotlib
 import sys
-from scripts.checker import CodeChecker
+from checker import CodeChecker
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
