@@ -3,7 +3,7 @@
 import numpy as np
 
 ## First check
-def check_doorlopende_doos(update_function):
+def check_doorlopende_doos(namespace, plots):
     class FakeParticle:
         def __init__(self):
             self.r = np.array([0.0, 0.0])
@@ -18,6 +18,8 @@ def check_doorlopende_doos(update_function):
 
     particle = FakeParticle()
     dot = FakeDot()
+
+    update_function = namespace["update"]
 
     # Make particle and dot available to update()
     update_function.__globals__["particle"] = particle
@@ -44,7 +46,7 @@ def check_doorlopende_doos(update_function):
         np.testing.assert_allclose(particle.r[0], expected_x, err_msg=f"Incorrect boundary handling for x={initial_x}")
 
 ## Second check
-def check_harde_wanden(update_function):
+def check_harde_wanden(namespace, plots):
 
     class FakeParticle:
         def __init__(self):
@@ -62,6 +64,8 @@ def check_harde_wanden(update_function):
     particle = FakeParticle()
     dot = FakeDot()
 
+    update_function = namespace["update"]
+    
     # Make particle and dot available to update()
     update_function.__globals__["particle"] = particle
     update_function.__globals__["dot"] = dot
@@ -94,7 +98,7 @@ def check_harde_wanden(update_function):
         )
 
 ## Third check
-def check_botsingsvoorwaarde(ParticleClass):
+def check_botsingsvoorwaarde(namespace, plots):
 
     # Test cases:
     # (position1, radius1, position2, radius2, expected)
@@ -110,6 +114,8 @@ def check_botsingsvoorwaarde(ParticleClass):
         ([0, 0], 2, [2, 0], 1, True),      # Different radii
         ([-3, -4], 1, [-3, -7], 1, False), # Negative coordinates
     ]
+
+    ParticleClass = namespace["ParticleClass"]
 
     for r1, R1, r2, R2, expected in test_cases:
 
@@ -127,7 +133,9 @@ def check_botsingsvoorwaarde(ParticleClass):
         )
 
 
-def check_eindantwoord(num_botsingen):
+def check_eindantwoord(namespace, plots):
+    num_botsingen = namespace["num_botsingen"]
+    
     assert num_botsingen == 22, (
         f"Incorrect number of collisions: "
         f"expected XX, got {num_botsingen}."

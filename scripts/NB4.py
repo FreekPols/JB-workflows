@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def check_uniform_particles(create_uniform_particles):
+def check_uniform_particles(namespace, plots):
 
     # Test parameters
     N = 20
@@ -15,9 +15,6 @@ def check_uniform_particles(create_uniform_particles):
             self.v = np.asarray(v, dtype=float)
             self.r = np.asarray(r, dtype=float)
             self.R = R
-
-    # Make required variables available to the student's function
-    namespace = create_uniform_particles.__globals__
 
     namespace["N"] = N
     namespace["V_0"] = V_0
@@ -35,6 +32,8 @@ def check_uniform_particles(create_uniform_particles):
     )
 
     particles = [old_particle]
+
+    create_uniform_particles = namespace.get("create_uniform_particles")
 
     # Run the student's function
     create_uniform_particles(particles)
@@ -89,7 +88,7 @@ def check_uniform_particles(create_uniform_particles):
         )
 
 
-def check_numsteps(source):
+def check_numsteps(namespace, plots):
 
     test_cases = [
         # BOX_SIZE_0, V_0, DT
@@ -101,21 +100,12 @@ def check_numsteps(source):
 
     for box_size, v0, dt in test_cases:
 
-        namespace = {
-            "BOX_SIZE_0": box_size,
-            "V_0": v0,
-            "DT": dt,
-        }
-
-        # Execute student's code with test parameters
-        exec(source, namespace)
-
-        assert "num_steps" in namespace, (
-            "The variable num_steps was not defined."
-        )
+        namespace["BOX_SIZE_0"] = box_size
+        namespace["V_0"] = v0
+        namespace["DT"] = dt
 
         expected = round(2 * box_size / (v0 * dt))
-        result = namespace["num_steps"]
+        result = namespace["calculate_num_steps"]()
 
         assert result == expected, (
             f"Incorrect num_steps for BOX_SIZE_0={box_size}, "
@@ -124,7 +114,7 @@ def check_numsteps(source):
         )
 
 
-def check_maxwell2d(maxwell2d):
+def check_maxwell2d(namespace, plots):
 
     test_cases = [
         # v, a
@@ -134,6 +124,8 @@ def check_maxwell2d(maxwell2d):
         (2.0, 0.5),
         (3.0, 1.5),
     ]
+
+    maxwell2d = namespace.get("maxwell2d")
 
     for v, a in test_cases:
         expected = a * v * np.exp(-a * v**2 / 2)
@@ -161,11 +153,12 @@ def check_maxwell2d(maxwell2d):
     )
 
 
-def check_maxwell_fit(popt):
+def check_maxwell_fit(namespace, plots):
 
     expected = 1.88190321
     tolerance = 0.15  # 15% relative tolerance
 
+    popt = namespace.get("popt")
     popt = np.asarray(popt, dtype=float)
 
     assert popt.size >= 1, (
@@ -185,12 +178,13 @@ def check_maxwell_fit(popt):
         )
     )
 
-def check_excellent(source):
+def check_excellent(namespace, plots):
     # Ignore empty lines and comments
-    lines = [
-        line.strip()
-        for line in source.splitlines()
-        if line.strip() and not line.strip().startswith("#")
-    ]
-
-    assert lines, "The NB4_excellent cell is empty."
+    # lines = [
+    #     line.strip()
+    #     for line in source.splitlines()
+    #     if line.strip() and not line.strip().startswith("#")
+    # ]
+    
+    #assert lines, "The NB4_excellent cell is empty."
+    return

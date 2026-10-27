@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def check_tempfun(temperature_function):
+def check_tempfun(namespace, plots):
 
     class FakeParticle:
         def __init__(self, kin_energy):
@@ -25,6 +25,10 @@ def check_tempfun(temperature_function):
             for energy in energies
         ]
 
+        temperature_function = namespace.get("temperature")
+        if temperature_function is None:
+            raise ValueError("temperature() not defined")
+
         result = temperature_function(particles)
 
         np.testing.assert_allclose(
@@ -38,8 +42,11 @@ def check_tempfun(temperature_function):
 
 
 
-def check_const_temp(temperatures):
+def check_const_temp(namespace, plots):
 
+    temperatures = namespace.get("temperatures")
+    if temperatures is None:
+        raise ValueError("temperatures variable not defined")
     temperatures = np.asarray(temperatures, dtype=float)
 
     # Check that temperatures have been recorded
@@ -60,23 +67,25 @@ def check_const_temp(temperatures):
         f"maximum: {temperatures.max():.2f} K."
     )        
 
-def check_plot_pres(pressures, calls):
+def check_plot_pres(namespace, plots):
 
     expected = np.arange(1, 101, dtype=float)
 
-    # Check initialization
-    assert calls["create"] == 1, (
-        "create_particles() should be called exactly once."
+    # check 1 plot was generated
+    assert len(plots) == 1, (
+        f"Expected 1 plot, got {len(plots)}."
     )
 
-    # Check number of time steps
-    assert calls["steps"] == 100, (
-        f"Expected 100 time steps, got {calls['steps']}."
-    )
+    plot = plots[0]
+
+    # get data of first line in the plot
+    line = plot.get_lines()[0]
+    pressures = line.get_ydata()
+    timesteps = line.get_xdata()
 
     # Check that pressure is recorded at every time step
     np.testing.assert_allclose(
-        pressures,
+        timesteps,
         expected,
         err_msg="Pressure was not recorded correctly at each time step."
     )
