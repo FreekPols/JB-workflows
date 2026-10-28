@@ -91,7 +91,7 @@ jobs:
         if: ${{ inputs.build_pdf || inputs.execute_python || inputs.run_nb_checks || inputs.run_fig_checks || inputs.run_fig_checks || inputs.run_git_user_log }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'   # or your version
+          python-version: '3.14.10'   # or your version
 
       - name: Install Python dependencies
         if: ${{ inputs.build_pdf || inputs.execute_python || inputs.run_nb_checks || inputs.run_fig_checks || inputs.run_git_user_log }}
