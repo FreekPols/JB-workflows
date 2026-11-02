@@ -68,7 +68,7 @@ jobs:
             path: .jb-workflows
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Setup Node
         uses: actions/setup-node@v5
