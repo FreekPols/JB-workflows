@@ -19,13 +19,13 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
             # Checkout the repository containing the central checks
       - name: Checkout JB workflows
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: FreekPols/JB-workflows
           path: .jb-workflows
