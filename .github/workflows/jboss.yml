@@ -49,7 +49,9 @@ jobs:
           node-version: 24
 
       - name: Install MyST
-        run: npm install -g mystmd
+        run: |
+          npm install -g mystmd@1.11.0
+          myst --version
 
       - name: Set up Python
         uses: actions/setup-python@v7
